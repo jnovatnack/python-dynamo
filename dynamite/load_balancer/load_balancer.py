@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # ------------------------------------------------------
 # Imports
 # ------------------------------------------------------
@@ -116,12 +117,16 @@ class LoadBalancer(object):
 def parse_args():
     parser = OptionParser()
     parser.add_option('-s', '--server', dest='servers',
-                      help='List of storage nodes(one per server)',
+                      help='List of storage nodes(one per server) (Required)',
                       action='append', default=[])
     parser.add_option('-p', '--port', dest='port', default=30000,
                       help='Port to start the storage node on')    
 
     options, args = parser.parse_args()
+    if not options.servers:
+        parser.print_help()
+        exit(-1)
+        
     return options
 
 if __name__ == '__main__':
