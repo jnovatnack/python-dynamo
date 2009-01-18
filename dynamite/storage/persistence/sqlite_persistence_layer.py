@@ -39,7 +39,10 @@ class SqlitePersistenceLayer(PersistenceLayer):
         """
         Initializes the persistence layer.
         """
+        logging.info('Conncting to sqlite db %s' % self.conn_str)
         self.conn = sqlite3.connect(self.conn_str)
+
+        rows = [row for row in self.conn.execute("SELECT * FROM key_values")]
         try:
             f = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 
                                   self.SQL_FILE))
@@ -83,6 +86,7 @@ class SqlitePersistenceLayer(PersistenceLayer):
             result = [row for row in cur]
         except:
             logging.error('Error getting key=%s' % key)
+            raise
             result = []
             
         return result
@@ -105,6 +109,7 @@ class SqlitePersistenceLayer(PersistenceLayer):
             cur = self.conn.cursor()
             cur.execute("INSERT INTO key_values(key, value, date) VALUES (?, ?, ?)",
                         (key, data, now))
+            self.conn.commit()
             result = True
         except:
             logging.error('Error putting key=%s, data=%s' % (key, data))

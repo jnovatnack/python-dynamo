@@ -15,10 +15,10 @@ from dynamite.storage.persistence.sqlite_persistence_layer import SqlitePersiste
 # ------------------------------------------------------
 # Config
 # ------------------------------------------------------
-logging.basicConfig(level=logging.ERROR)
+logging.basicConfig(level=logging.INFO)
 
 # A simple threaded xml rpc-server
-class AsyncXMLRPCServer(SocketServer.ThreadingMixIn,SimpleXMLRPCServer): pass
+#class AsyncXMLRPCServer(SocketServer.ThreadingMixIn,SimpleXMLRPCServer): pass
 
 # ------------------------------------------------------
 # Implementation
@@ -80,8 +80,9 @@ class StorageNode(object):
         """
         Main storage node loop
         """
-        self.server = AsyncXMLRPCServer(('', self.port), allow_none=True)
+        self.server = SimpleXMLRPCServer(('', self.port), allow_none=True)
         self.server.register_function(self.get, "get")
+        self.server.register_function(self.put, "put")        
         self.server.socket.settimeout(1.0)
         self.server.serve_forever()
         
@@ -99,7 +100,7 @@ class StorageNode(object):
             logging.info("I'm not responsible for %s (%s vs %s)" % (key, 
                                                                     respon_node, 
                                                                     self.my_name))
-            return None, None
+            return None
         
         # Read it from the database
         result = self.persis.get_key(key)
