@@ -30,4 +30,17 @@ class DataStoreView(object):
             
         self.persis = SqlitePersistenceLayer(name)
         self.persis.init_persistence()
+        
+    def get_node(self, key):
+        """
+        Gets the node responsible for a particular key
+        
+        :Parameters:
+            key : str
+                The key
+        :rtype: str
+        :returns: The node name responsible for the key
+        """
+        node = self.consistent_hash.get_node(key)
+        return node
 

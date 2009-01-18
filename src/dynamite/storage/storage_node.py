@@ -4,7 +4,7 @@
 import logging
 import xmlrpclib
 import SocketServer
-from socket import gethostname
+import socket
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 from optparse import OptionParser
 
@@ -38,8 +38,23 @@ class StorageNode(object):
                 Port number to start on
         """
         self.port = int(port)
-        self.datastore_view = DataStoreView(servers, str(self))
+        if servers is None:
+            servers = []
+        
+        # Add myself to the servers list
+        self.my_name = str(self)
+        servers.append(self.my_name)
+        self.datastore_view = DataStoreView(servers, self.my_name)
 
+    def run(self):
+        """
+        Main storage node loop
+        """
+        self.server = AsyncXMLRPCServer(('', self.port), allow_none=True)
+        self.server.register_function(self.get, "get")
+        self.server.socket.settimeout(1.0)
+        self.server.serve_forever()
+        
     def get(self, key):
         """
         Gets a key
@@ -48,9 +63,21 @@ class StorageNode(object):
             key : str
                 The key value
         """
-        return 'value'
+        # Make sure I am supposed to have this key
+        respon_node = self.datastore_view.get_node(key)
+        if respon_node != self.my_name:
+            logging.info("I'm not responsible for %s (%s vs %s)" % (key, 
+                                                                    respon_node, 
+                                                                    self.my_name))
+            return None, None
+        
+        # Read it from the database
+        
+        # If the contexts don't line up then return both
+        
+        return 'value', 'foo'
     
-    def put(self, key, value):
+    def put(self, key, value, context=None):
         """
         Puts a key value in the datastore
         
@@ -59,17 +86,19 @@ class StorageNode(object):
                 The key name
             value : str
                 The value
+            context : str
+                Should be a date time stamp
         """
-        return 'OKAY'
+        # Make sure I am supposed to have this key
+        if self.datastore_view.get_node(key) != self.my_name:
+            logging.info("I'm not responsible for %s" % key)
+            return None
 
-    def run(self):
-        """
-        Main storage node loop
-        """
-        self.server = AsyncXMLRPCServer(('', self.port))
-        self.server.register_function(self.get, "get")
-        self.server.socket.settimeout(1.0)
-        self.server.serve_forever()
+        # Read it from the database
+        
+        # If the contexts don't line up then return both
+
+        return 'OKAY'        
          
     def __str__(self):
         """
@@ -79,9 +108,9 @@ class StorageNode(object):
         :returns: A string representation of the storage node 
         """
         if getattr(self, 'port'):
-            return '%s:%s' % (gethostname(), self.port)
+            return '%s:%s' % (socket.gethostbyname(socket.gethostname()), self.port)
         else:
-            return '%s' % gethostname()
+            return '%s' % socket.gethostbyname(socket.gethostname())
         
 
 # ------------------------------------------------------
@@ -91,15 +120,11 @@ def parse_args():
     parser = OptionParser()
     parser.add_option('-s', '--server', dest='servers',
                       help='List of storage nodes(one per server)',
-                      action='append')
+                      action='append', default=[])
     parser.add_option('-p', '--port', dest='port', default=25000,
                       help='Port to start the storage node on')
 
     options, args = parser.parse_args()
-    if not options.servers:
-        parser.print_help()
-        exit(1)
-
     return options
 
 if __name__ == '__main__':

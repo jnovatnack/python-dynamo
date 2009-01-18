@@ -111,6 +111,7 @@ class ConsistentHash(object):
         :rtype: object
         :returns: The node corresponding to the key
         """
+        logging.debug('getting the node key=%s sorted keys=%s' % (key,self.sorted_keys))
         if len(self.sorted_keys) == 0:
             raise exceptions.ValueError('ring is empty cannot get %s' % key)
         
@@ -188,5 +189,5 @@ class ConsistentHash(object):
         if self.strategy == self.STRATEGY1:
             hash_key = random.randint(0, 2**128)
         else:             
-            hash_key = self.REPLICATION_STR % (node, rep_num)
+            hash_key = self._gen_key(self.REPLICATION_STR % (node, rep_num))
         return hash_key           
