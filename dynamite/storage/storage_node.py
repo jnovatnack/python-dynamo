@@ -3,7 +3,6 @@
 # ------------------------------------------------------
 import logging
 import xmlrpclib
-import SocketServer
 import socket
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 from optparse import OptionParser
@@ -16,9 +15,6 @@ from dynamite.storage.persistence.sqlite_persistence_layer import SqlitePersiste
 # Config
 # ------------------------------------------------------
 logging.basicConfig(level=logging.INFO)
-
-# A simple threaded xml rpc-server
-#class AsyncXMLRPCServer(SocketServer.ThreadingMixIn,SimpleXMLRPCServer): pass
 
 # ------------------------------------------------------
 # Implementation
@@ -47,7 +43,7 @@ class StorageNode(object):
         # Add myself to the servers list
         self.my_name = str(self)
         servers.append(self.my_name)
-        self.datastore_view = DataStoreView(servers, self.my_name)
+        self.datastore_view = DataStoreView(servers)
 
         # Load the persistence layer
         self._load_persistence_layer()
@@ -82,10 +78,12 @@ class StorageNode(object):
         """
         self.server = SimpleXMLRPCServer(('', self.port), allow_none=True)
         self.server.register_function(self.get, "get")
-        self.server.register_function(self.put, "put")        
-        self.server.socket.settimeout(1.0)
+        self.server.register_function(self.put, "put")  
         self.server.serve_forever()
-        
+
+    # ------------------------------------------------------
+    # RPC methods
+    # ------------------------------------------------------             
     def get(self, key):
         """
         Gets a key
@@ -94,6 +92,7 @@ class StorageNode(object):
             key : str
                 The key value
         """
+        logging.debug('Getting key=%s' % key)
         # Make sure I am supposed to have this key
         respon_node = self.datastore_view.get_node(key)
         if respon_node != self.my_name:
@@ -111,7 +110,8 @@ class StorageNode(object):
             value = result[0][1]
         else:
             value = self._reconcile_conflict(result)[0]
-        
+
+        logging.debug('Returning value=%s' % value)        
         return value
     
     def put(self, key, value, context=None):

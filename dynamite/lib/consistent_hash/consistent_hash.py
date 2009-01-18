@@ -24,7 +24,7 @@ class ConsistentHash(object):
     DETERMINISTIC = 'deterministic'
     STRATEGY1 = 'strategy1'
     
-    def __init__(self, replication=2, strategy=DETERMINISTIC):
+    def __init__(self, replication=5, strategy=DETERMINISTIC):
         """
         :Parameters:
             replication : int

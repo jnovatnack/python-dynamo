@@ -12,14 +12,12 @@ class DataStoreView(object):
     """
     A storage node/load balancers local view of the storage nodes ring.
     """
-    def __init__(self, servers, name):
+    def __init__(self, servers):
         """
         Parameters:
             servers : list(str)
                 A list of servers.  Each server name is in the 
                 format {host/ip}:port
-            name : str
-                The name of the node
         """
         self.consistent_hash = ConsistentHash()
         

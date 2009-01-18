@@ -42,7 +42,6 @@ class SqlitePersistenceLayer(PersistenceLayer):
         logging.info('Conncting to sqlite db %s' % self.conn_str)
         self.conn = sqlite3.connect(self.conn_str)
 
-        rows = [row for row in self.conn.execute("SELECT * FROM key_values")]
         try:
             f = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 
                                   self.SQL_FILE))
