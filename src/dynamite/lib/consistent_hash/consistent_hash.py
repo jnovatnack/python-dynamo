@@ -25,16 +25,23 @@ class ConsistentHash(object):
         replication : int
             Number of times a node is replicated
     """
-    def __init__(self, replication=2):
+    REPLICATION_STR = '%s-%s'
+    DETERMINISTIC = 'deterministic'
+    STRATEGY1 = 'strategy1'
+    
+    def __init__(self, replication=2, strategy=DETERMINISTIC):
         """
         :Parameters:
             replication : int
                 Number of virtual instances per node
+            strategy : str
+                The strategy for mapping nodes to hash values
         """
         self.replication_factor = replication
         self.ring = dict()
         self.sorted_keys = []
         self.node_tokens = defaultdict(list)
+        self.strategy = strategy
 
     def __len__(self):
         """
@@ -48,12 +55,18 @@ class ConsistentHash(object):
     # -------------------------------------------------
     # Public methods
     # -------------------------------------------------
-    def add(self, node):
+    def add(self, node, strategy='deterministic'):
         """
-        Adds a node to the hash.  For each node self.replication_factor
-        tokens are added to the hash with the keys randomly chosen from
-        the hash space.  This represents partition strategy 1 from
-        "Dynamo : amazons highly available key-value store"
+        Adds a node to the hash.  
+        
+        Strategies:
+            DETERMINISTC : token is created from the node name.  Note that this can
+                           result in non-uniform node distributions, but is necessary 
+                           with messaging between storage nodes.
+            STRATEGY1    : For each node self.replication_factor ftokens are added 
+                           to the hash with the keys randomly chosen from the hash 
+                           space.  This represents partition strategy 1 from
+                           "Dynamo : amazons highly available key-value store"
         
         Note that the node must support str().  
         
@@ -65,7 +78,7 @@ class ConsistentHash(object):
             raise exceptions.ValueError('Node %s already in the consistent hash' % node) 
         
         for i in xrange(0, self.replication_factor):
-            hash_key = random.randint(0, 2**128)
+            hash_key = self._get_node_hash_key(node, i)
             self.node_tokens[node].append(hash_key)
             self.ring[hash_key] = node
 
@@ -76,7 +89,7 @@ class ConsistentHash(object):
                 self.sorted_keys.append(hash_key)
             else:
                 self.sorted_keys.insert(pos, hash_key)
-    
+        
     def remove(self, node):
         """
         Removes a node from the hash
@@ -165,3 +178,20 @@ class ConsistentHash(object):
         key_consistency = hash_keys == self.sorted_keys
 
         return len_consistency and key_consistency
+    
+    def _get_node_hash_key(self, node, rep_num):
+        """
+        Gets the hash key for a node and replication number given the
+        partitioning strategy
+        
+        :Parameters:
+            node : object
+                A node
+            rep_num : int
+                The replication number
+        """
+        if self.strategy == self.STRATEGY1:
+            hash_key = random.randint(0, 2**128)
+        else:             
+            hash_key = self.REPLICATION_STR % (node, rep_num)
+        return hash_key           
