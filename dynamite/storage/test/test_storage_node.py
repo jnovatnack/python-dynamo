@@ -4,8 +4,7 @@
 import logging
 from unittest import TestCase
 
-from dynamite.storage.storage_node import StorageNode
-from dynamite.storage.persistence.sqlite_persistence_layer import SqlitePersistenceLayer
+from dynamite.storage.test.mocks import get_mock_storage_node
 
 # --------------------------------------------
 # Config
@@ -17,10 +16,7 @@ logging.basicConfig(level=logging.ERROR)
 # --------------------------------------------
 class TestStorageNode(TestCase):
     def setUp(self):
-        StorageNode._load_persistence_layer = lambda obj: None
-        self.sn = StorageNode([], 1111111)
-        self.sn.persis = SqlitePersistenceLayer('test1', ':memory:')
-        self.sn.persis.init_persistence()                       
+        self.sn = get_mock_storage_node()
 
     def test_simple_put(self):
         """
