@@ -4,7 +4,6 @@
 import logging
 
 from dynamite.lib.consistent_hash import ConsistentHash
-from dynamite.storage.persistence.sqlite_persistence_layer import SqlitePersistenceLayer
 
 # ------------------------------------------------------
 # Implementation
@@ -27,10 +26,7 @@ class DataStoreView(object):
         logging.info('Adding servers %s' % servers)
         for server in servers:
             self.consistent_hash.add(server)
-            
-        self.persis = SqlitePersistenceLayer(name)
-        self.persis.init_persistence()
-        
+               
     def get_node(self, key):
         """
         Gets the node responsible for a particular key
@@ -43,4 +39,4 @@ class DataStoreView(object):
         """
         node = self.consistent_hash.get_node(key)
         return node
-
+    

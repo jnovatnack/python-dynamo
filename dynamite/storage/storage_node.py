@@ -9,6 +9,7 @@ from SimpleXMLRPCServer import SimpleXMLRPCServer
 from optparse import OptionParser
 
 from dynamite.storage.datastore_view import DataStoreView
+from dynamite.storage.persistence.sqlite_persistence_layer import SqlitePersistenceLayer
 
 # ------------------------------------------------------
 # Config
@@ -45,7 +46,33 @@ class StorageNode(object):
         self.my_name = str(self)
         servers.append(self.my_name)
         self.datastore_view = DataStoreView(servers, self.my_name)
+        
+        # Setup my persistence layer
+        self.persis = SqlitePersistenceLayer(self.my_name)
+        self.persis.init_persistence()        
 
+    def __del__(self):
+        """
+        Destructor
+        """
+        if self.persis:
+            self.persis.close()    
+        
+    def __str__(self):
+        """
+        Builds a string representation of the storage node
+        
+        :rtype: str
+        :returns: A string representation of the storage node 
+        """
+        if getattr(self, 'port'):
+            return '%s:%s' % (socket.gethostbyname(socket.gethostname()), self.port)
+        else:
+            return '%s' % socket.gethostbyname(socket.gethostname())
+    
+    # ------------------------------------------------------
+    # Public methods
+    # ------------------------------------------------------                
     def run(self):
         """
         Main storage node loop
@@ -72,10 +99,12 @@ class StorageNode(object):
             return None, None
         
         # Read it from the database
+        result = self.persis.get_key(key)
         
         # If the contexts don't line up then return both
+        # @TODO implement context checking and unifying
         
-        return 'value', 'foo'
+        return result
     
     def put(self, key, value, context=None):
         """
@@ -100,17 +129,17 @@ class StorageNode(object):
 
         return 'OKAY'        
          
-    def __str__(self):
+    # ------------------------------------------------------
+    # Private methods
+    # ------------------------------------------------------  
+    def _get_key_from_datastore(self, key):
         """
-        Builds a string representation of the storage node
+        Reads a key from the persistence layer
         
-        :rtype: str
-        :returns: A string representation of the storage node 
+        :Parameters:
+            key : str
         """
-        if getattr(self, 'port'):
-            return '%s:%s' % (socket.gethostbyname(socket.gethostname()), self.port)
-        else:
-            return '%s' % socket.gethostbyname(socket.gethostname())
+        
         
 
 # ------------------------------------------------------

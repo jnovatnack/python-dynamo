@@ -54,11 +54,11 @@ class ConsistentHash(object):
         """
         Adds a node to the hash.  
         
-        Strategies:
+        Partitioning strategies:
             DETERMINISTC : token is created from the node name.  Note that this can
                            result in non-uniform node distributions, but is necessary 
                            with messaging between storage nodes.
-            STRATEGY1    : For each node self.replication_factor ftokens are added 
+            STRATEGY1    : For each node self.replication_factor T tokens are added 
                            to the hash with the keys randomly chosen from the hash 
                            space.  This represents partition strategy 1 from
                            "Dynamo : amazons highly available key-value store"
