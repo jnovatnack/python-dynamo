@@ -8,11 +8,6 @@ import random
 from collections import defaultdict
 
 # -------------------------------------------------
-# Config
-# -------------------------------------------------    
-logging.basicConfig()
-
-# -------------------------------------------------
 # Consistent Hash
 # -------------------------------------------------    
 class ConsistentHash(object):
