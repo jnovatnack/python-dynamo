@@ -10,7 +10,7 @@ from dynamite.lib.consistent_hash import ConsistentHash
 # ------------------------------------------------------
 class DataStoreView(object):
     """
-    A storage node/load balancers view of the storage nodes.
+    A storage node/load balancers local view of the storage nodes ring.
     """
     def __init__(self, servers, name):
         """

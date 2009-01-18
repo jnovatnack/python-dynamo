@@ -7,6 +7,7 @@ import SocketServer
 import socket
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 from optparse import OptionParser
+from datetime import datetime, timedelta
 
 from dynamite.storage.datastore_view import DataStoreView
 from dynamite.storage.persistence.sqlite_persistence_layer import SqlitePersistenceLayer
@@ -14,7 +15,7 @@ from dynamite.storage.persistence.sqlite_persistence_layer import SqlitePersiste
 # ------------------------------------------------------
 # Config
 # ------------------------------------------------------
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.ERROR)
 
 # A simple threaded xml rpc-server
 class AsyncXMLRPCServer(SocketServer.ThreadingMixIn,SimpleXMLRPCServer): pass
@@ -39,6 +40,7 @@ class StorageNode(object):
                 Port number to start on
         """
         self.port = int(port)
+        self.server = None
         if servers is None:
             servers = []
         
@@ -46,17 +48,18 @@ class StorageNode(object):
         self.my_name = str(self)
         servers.append(self.my_name)
         self.datastore_view = DataStoreView(servers, self.my_name)
-        
-        # Setup my persistence layer
-        self.persis = SqlitePersistenceLayer(self.my_name)
-        self.persis.init_persistence()        
 
+        # Load the persistence layer
+        self._load_persistence_layer()
+             
     def __del__(self):
         """
         Destructor
         """
         if self.persis:
             self.persis.close()    
+        if self.server:
+            self.server.server_close()
         
     def __str__(self):
         """
@@ -101,10 +104,14 @@ class StorageNode(object):
         # Read it from the database
         result = self.persis.get_key(key)
         
-        # If the contexts don't line up then return both
-        # @TODO implement context checking and unifying
+        # If the contexts don't line up then return the most recent
+        value = None
+        if len(result) == 1:
+            value = result[0][1]
+        else:
+            value = self._reconcile_conflict(result)[0]
         
-        return result
+        return value
     
     def put(self, key, value, context=None):
         """
@@ -116,32 +123,85 @@ class StorageNode(object):
             value : str
                 The value
             context : str
-                Should be a date time stamp
+                Should be only be None for now.  In the future an application will be
+                able to add a custom context string
+                
+        :rtype: str
+        :returns 200 if the operation succeeded, 400 otherwise
         """
         # Make sure I am supposed to have this key
         if self.datastore_view.get_node(key) != self.my_name:
             logging.info("I'm not responsible for %s" % key)
             return None
-
-        # Read it from the database
         
-        # If the contexts don't line up then return both
-
-        return 'OKAY'        
+        res_code = None
+        try:
+            # Read it from the database
+            result = self.persis.put_key(key, value)
+            res_code = '200'
+        except:
+            logging.error('Error putting key=%s value=%s into the persistence layer' % 
+                          (key, value))
+            res_code = '400'
+        
+        return res_code
          
     # ------------------------------------------------------
     # Private methods
     # ------------------------------------------------------  
-    def _get_key_from_datastore(self, key):
+    def _reconcile_conflict(self, result):
         """
-        Reads a key from the persistence layer
+        Reconciles the conflict between a number of values.  Note
+        that currently this defaults to taking the last written value.
+        In the future this will be expanded to allow application specific
+        conflict resolution
         
         :Parameters:
-            key : str
+            result : list(tuples)
+                A list of result tuples from the persistence layer in the form
+                [(id, "value", "date"), ...]
+        :rtype: tuple(int, str)
+        :returns An id, string tuple of the chosen version
         """
-        
-        
+        last_result = None
+        last_date = None
+        for res in result:
+            if last_result is None:
+                last_result = res[1]
+                last_date = self._parse_date(res[2])  
+            else:
+                date = self._parse_date(res[2])
+                if date > last_date:
+                    last_date = date
+                    last_result = res[1]
+ 
+        return (last_result, last_date)
 
+    def _load_persistence_layer(self):
+        """
+        Loads the persistence layer
+        """
+        # Setup my persistence layer
+        self.persis = SqlitePersistenceLayer(self.my_name)
+        self.persis.init_persistence()  
+        
+    def _parse_date(self, datestr):
+        """
+        Parses an iso formatted date
+        
+        :Parameters:
+            datestr : str
+                An iso formatted date
+        :rtype: datetime
+        :returns A date object
+        """
+        date_str, micros = datestr.split('.')
+        date = datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
+        date += timedelta(microseconds=float(micros))
+        
+        return date
+        
+                
 # ------------------------------------------------------
 # Main
 # ------------------------------------------------------
@@ -160,5 +220,3 @@ if __name__ == '__main__':
     options = parse_args()
     storage_node = StorageNode(options.servers, options.port)
     storage_node.run()
-
-

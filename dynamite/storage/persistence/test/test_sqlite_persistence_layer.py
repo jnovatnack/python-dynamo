@@ -9,8 +9,11 @@ from dynamite.storage.persistence.sqlite_persistence_layer import SqlitePersiste
 # Tests
 # --------------------------------------------
 class TestSqlitePersistenceLayer(TestCase):
+    """
+    Tests the sqlite persistence layer
+    """
     def setUp(self):
-        self.persis = SqlitePersistenceLayer(':memory:')
+        self.persis = SqlitePersistenceLayer('test_layer', ':memory:')
         self.persis.init_persistence()
         
     def tearDown(self):
