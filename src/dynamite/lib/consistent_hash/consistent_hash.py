@@ -4,6 +4,8 @@
 import md5
 import exceptions
 import logging
+import random
+from collections import defaultdict
 
 # -------------------------------------------------
 # Config
@@ -17,46 +19,55 @@ class ConsistentHash(object):
     """
     A consistent hash.  
     
-    Adapted from:
-    http://amix.dk/blog/viewEntry/19367
-    
-    Also referenced:
-    http://www.lexemetech.com/2007/11/consistent-hashing.html
+    Adapted from: http://amix.dk/blog/viewEntry/19367
     
     :Parameters:
         replication : int
             Number of times a node is replicated
     """
-    REPLICATION_STR = '%s-%s'
-    
     def __init__(self, replication=2):
         """
         :Parameters:
             replication : int
-                Replication per node
+                Number of virtual instances per node
         """
         self.replication_factor = replication
         self.ring = dict()
         self.sorted_keys = []
+        self.node_tokens = defaultdict(list)
+
+    def __len__(self):
+        """
+        Returns the number of virtual nodes in the hash
+        
+        :rtype: int
+        :returns: The number of virtual nodes in the hash
+        """
+        return len(self.ring)
     
     # -------------------------------------------------
     # Public methods
     # -------------------------------------------------
     def add(self, node):
         """
-        Adds a node to the hash.  Note that the node
-        must support str()
+        Adds a node to the hash.  For each node self.replication_factor
+        tokens are added to the hash with the keys randomly chosen from
+        the hash space.  This represents partition strategy 1 from
+        "Dynamo : amazons highly available key-value store"
+        
+        Note that the node must support str().  
         
         :Parameters:
             node : object
                 Any object that you wish to add to the hash
         """
+        if self.node_tokens.get(node):
+            raise exceptions.ValueError('Node %s already in the consistent hash' % node) 
+        
         for i in xrange(0, self.replication_factor):
-            hash_key = self._gen_key(str(self.REPLICATION_STR % (node, i)))
-            if not hash_key in self.ring:
-                self.ring[hash_key] = node
-            else:
-                raise exceptions.ValueError('Key %s already exists' % hash_key)
+            hash_key = random.randint(0, 2**128)
+            self.node_tokens[node].append(hash_key)
+            self.ring[hash_key] = node
 
             # Add the key to the sorted list.  If the position is 0 must 
             # disambiguate between this being the largest and smallest key            
@@ -66,7 +77,7 @@ class ConsistentHash(object):
             else:
                 self.sorted_keys.insert(pos, hash_key)
     
-    def delete(self, node):
+    def remove(self, node):
         """
         Removes a node from the hash
         
@@ -74,14 +85,14 @@ class ConsistentHash(object):
             obj : object
                 Any object that you wish to delete from the hash
         """
-        for i in xrange(0, self.replication_factor):
-            hash_key = self._gen_key(str(self.REPLICATION_STR % (node, i)))
-            if hash_key in self.ring:
-                del self.ring[hash_key]
-                self.sorted_keys.remove(hash_key)
+        for token in self.node_tokens.get(node, []):
+            if token in self.ring:
+                del self.ring[token]
+                self.sorted_keys.remove(token)
             else:
                 logging.info('%s not found in the consistent hash' % str(obj))
-    
+        del self.node_tokens[node]
+         
     def get_node(self, key):
         """
         Gets the virtual node that the key maps to
@@ -100,22 +111,19 @@ class ConsistentHash(object):
         pos = self._get_pos(hash_key)
         
         return self.ring[self.sorted_keys[pos]]
-    
-    def __len__(self):
-        """
-        Returns the number of virtual nodes in the hash
         
-        :rtype: int
-        :returns: The number of virtual nodes in the hash
-        """
-        return len(self.ring)
-    
     # -------------------------------------------------
     # Protected methods
     # -------------------------------------------------    
     def _get_pos(self, hash_key):
         """
         Gets the position of a ring in the consistent hash
+        
+        :Parameters:
+            key : long
+                The hash key
+        :rtype: int
+        :returns: The position of the key in the hash ring  
         """
         pos = None
         # Find the first key greater than the key of the input string        
@@ -147,6 +155,9 @@ class ConsistentHash(object):
         """
         Ensures that the sorted list of keys and hash keys are in
         agreement
+        
+        :rtype: bool
+        :returns: True if the ring and sorted keys are consistent
         """
         len_consistency = len(self.ring) == len(self.sorted_keys)
         hash_keys = self.ring.keys()

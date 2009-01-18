@@ -23,7 +23,7 @@ class TestConsistentHash(TestCase):
         self.assertEquals(len(cons_hash), 4)        
         
         self.assertTrue(cons_hash._is_consistent())   
-                
+#                
     def test_adding_same_node(self):
         """
         Ensures The hash throws an exception when the same name is
@@ -41,14 +41,14 @@ class TestConsistentHash(TestCase):
         
         self.assertTrue(cons_hash._is_consistent())               
         
-    def test_deleting(self):
+    def test_remove(self):
         """
-        Ensures that a node can be deleted
+        Ensures that a node can be removed
         """
         cons_hash = ConsistentHash(2)
         cons_hash.add('192.168.1.1')        
         self.assertEquals(len(cons_hash), 2)        
-        cons_hash.delete('192.168.1.1')                
+        cons_hash.remove('192.168.1.1')                
         self.assertEquals(len(cons_hash), 0)                
           
         self.assertTrue(cons_hash._is_consistent())  
