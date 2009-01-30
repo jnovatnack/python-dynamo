@@ -28,7 +28,7 @@ class LoadBalancer(object):
         """
         Parameters:
             servers : list(str)
-                A list of servers.  Each server name is in the 
+                A list of servers. Each server name is in the 
                 format {host/ip}:port
         """
         self.port = int(port)

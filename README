@@ -1,50 +1,13 @@
-Dynamite - A Dynamo Clone Written in Python
-John Novatnack 
-jnovatnack@gmail.com
+An implementation of dynamo in Python.   A work in progress.
 
-Overview
-========
-Dynamite implements a functional subset of the Dynamo key,value store
-developed by Amazon and described in "Dynamo: Amazon’s Highly Available 
-Key-value Store", G. DeCandia et al.  
-
-Install
-=======
-Dynamite can be installed by typing:
-
-python setup.py install
-
-This installs the dynamite model in your python third-party packages 
-directory and also two scripts: build/scripts-2.5/storage_node.py and 
-build/scripts-2.5/load_balancer.py in the dynamite directory.
-
-Starting Storage Nodes and Load Balancers.
-=========================================
-Prior to running ensure that your path includes the two scripts that were
-built in the install.  Because dynamite currently does not support adding or
-deleting storage nodes once the cluster is live, the first step is to bring 
-up the storage nodes.  Each node must be on its own port.  For example if I 
-want to start 3 storage nodes on ports 20050, 20051 and 20052 on my local 
-machine (192.168.3.4) I would enter the following:
+Using Dynamite
+==============
 
 storage_node.py -p 20050
 storage_node.py -p 20051
 storage_node.py -p 20052
 
-Note that storage nodes also take a list of servers as an additional parameter 
-for the future feature where a storage node will forward a get/put to the proper
-storage node.  This can be ignored for now for the sake of brevity.
-
-Next you must start the load_balancer as follows:
-
 load_balancer.py -s 192.168.3.4:20050 -s 192.168.3.4:20051 -s 192.168.3.4:20052
-
-Now you are up and running!  
-
-Using Dynamite
-==============
-You can now use an XML-RPC proxy to connect to a load_balancer and store/retrieve keys
- over HTTP.  Any example sessions follows
 
 In [1]: import xmlrpclib
 In [2]: proxy = xmlrpclib.ServerProxy('http://localhost:30000')
@@ -55,8 +18,7 @@ Out[4]: '200'
 In [5]: proxy.get("john")
 Out[5]: 'a later novatnack'
 
-Its also possible to start multiple load balancers if the number of requests
-increases.  In this case be sure to pass a port number to the second load_balancer.
+Two load balancers:
 
 load_balancer.py -s 192.168.3.4:20050 -s 192.168.3.4:20051 -s 192.168.3.4:20052
 load_balancer.py -s 192.168.3.4:20050 -s 192.168.3.4:20051 -s 192.168.3.4:20052 -p 30001
@@ -69,6 +31,3 @@ In [19]: proxy.put('abc', '123')
 Out[19]: '200'
 In [20]: proxy2.get('abc')
 Out[20]: '123'
-
-Be sure to watch the storage nodes to see that the keys are actually being 
-distributed!
