@@ -1,18 +1,18 @@
 from distutils.core import setup
-setup(name = 'dynamite',
+setup(name = 'dynamo',
       version ='1.0',
       description ='A Python Dynamo clone',
       author ='John Novatnack',
       author_email ='jnovatnack@gmail.com',
-      package_data = {'dynamite.storage.persistence' : 
+      package_data = {'dynamo.storage.persistence' : 
                       ['sql/*.sql']},
-      packages = ['dynamite',
-                  'dynamite.lib',
-                  'dynamite.lib.consistent_hash',                  
-                  'dynamite.load_balancer',
-                  'dynamite.storage',
-                  'dynamite.storage.datastore_view',
-                  'dynamite.storage.persistence'],
+      packages = ['dynamo',
+                  'dynamo.lib',
+                  'dynamo.lib.consistent_hash',                  
+                  'dynamo.load_balancer',
+                  'dynamo.storage',
+                  'dynamo.storage.datastore_view',
+                  'dynamo.storage.persistence'],
 
-      scripts = ['dynamite/load_balancer/load_balancer.py', 
-                 'dynamite/storage/storage_node.py'])
+      scripts = ['dynamo/load_balancer/load_balancer.py', 
+                 'dynamo/storage/storage_node.py'])
