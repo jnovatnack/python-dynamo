@@ -3,7 +3,7 @@
 # --------------------------------------------------------
 from unittest import TestCase
 
-from dynamite.load_balancer.load_balancer import LoadBalancer
+from dynamo.load_balancer.load_balancer import LoadBalancer
 
 # --------------------------------------------------------
 # Test

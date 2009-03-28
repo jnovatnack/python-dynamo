@@ -6,7 +6,7 @@ import sqlite3
 import os
 import datetime
 
-from dynamite.storage.persistence.persistence_layer import PersistenceLayer
+from dynamo.storage.persistence.persistence_layer import PersistenceLayer
 
 # ------------------------------------------------------
 # Implementation

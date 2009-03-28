@@ -1,13 +1,13 @@
 An implementation of dynamo in Python.   A work in progress.
 
-Using Dynamite
+Usage
 ==============
 
 storage_node.py -p 20050
 storage_node.py -p 20051
 storage_node.py -p 20052
 
-load_balancer.py -s 192.168.3.4:20050 -s 192.168.3.4:20051 -s 192.168.3.4:20052
+load_balancer.py -s 127.0.0.1:20050 -s 127.0.0.1:20051 -s 127.0.0.1:20052
 
 In [1]: import xmlrpclib
 In [2]: proxy = xmlrpclib.ServerProxy('http://localhost:30000')
@@ -20,8 +20,8 @@ Out[5]: 'a later novatnack'
 
 Two load balancers:
 
-load_balancer.py -s 192.168.3.4:20050 -s 192.168.3.4:20051 -s 192.168.3.4:20052
-load_balancer.py -s 192.168.3.4:20050 -s 192.168.3.4:20051 -s 192.168.3.4:20052 -p 30001
+load_balancer.py -s 127.0.0.1:20050 -s 127.0.0.1:20051 -s 127.0.0.1:20052
+load_balancer.py -s 127.0.0.1:20050 -s 127.0.0.1:20051 -s 127.0.0.1:20052 -p 30001
 
 Now they can both be queried:
 

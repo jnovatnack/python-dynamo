@@ -3,7 +3,7 @@
 # ------------------------------------------------------
 import logging
 
-from dynamite.lib.consistent_hash import ConsistentHash
+from dynamo.lib.consistent_hash import ConsistentHash
 
 # ------------------------------------------------------
 # Implementation

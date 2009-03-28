@@ -3,7 +3,7 @@
 # --------------------------------------------
 from unittest import TestCase
 
-from dynamite.storage.persistence.sqlite_persistence_layer import SqlitePersistenceLayer
+from dynamo.storage.persistence.sqlite_persistence_layer import SqlitePersistenceLayer
 
 # --------------------------------------------
 # Tests

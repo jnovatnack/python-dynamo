@@ -9,8 +9,8 @@ from SimpleXMLRPCServer import SimpleXMLRPCServer
 from optparse import OptionParser
 from datetime import datetime, timedelta
 
-from dynamite.storage.datastore_view import DataStoreView
-from dynamite.storage.persistence.sqlite_persistence_layer import SqlitePersistenceLayer
+from dynamo.storage.datastore_view import DataStoreView
+from dynamo.storage.persistence.sqlite_persistence_layer import SqlitePersistenceLayer
 
 # ------------------------------------------------------
 # Config

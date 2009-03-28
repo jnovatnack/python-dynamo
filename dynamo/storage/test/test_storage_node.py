@@ -4,7 +4,7 @@
 import logging
 from unittest import TestCase
 
-from dynamite.storage.test.mocks import get_mock_storage_node
+from dynamo.storage.test.mocks import get_mock_storage_node
 
 # --------------------------------------------
 # Config

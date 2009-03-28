@@ -8,7 +8,7 @@ import exceptions
 from optparse import OptionParser
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 
-from dynamite.storage.datastore_view import DataStoreView
+from dynamo.storage.datastore_view import DataStoreView
 
 # ------------------------------------------------------
 # Config
